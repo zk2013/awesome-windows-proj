@@ -1,8 +1,11 @@
 #include <Windows.h>
 
+bool g_exit_flag = false;
+HANDLE g_thread;
+
 DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 {
-	while (1) {
+	while (false == g_exit_flag) {
 		OutputDebugString(L"onload");
 		Sleep(2000);
 	}
@@ -12,18 +15,23 @@ DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 
 void on_load() {
 	
+	g_exit_flag = false;
+
 	DWORD dwThreadId;
-	CloseHandle(CreateThread(
+	g_thread = CreateThread(
 		NULL,                   // default security attributes
 		0,                      // use default stack size  
 		MyThreadFunction,       // thread function name
 		NULL,          // argument to thread function 
 		0,                      // use default creation flags 
-		&dwThreadId));   // returns the thread identifier );
+		&dwThreadId);   // returns the thread identifier );
 }
 
 void on_unload() {
 	OutputDebugString(L"on_unload");
+	g_exit_flag = true;
+	WaitForSingleObject(g_thread, INFINITE);
+
 }
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lParam)
